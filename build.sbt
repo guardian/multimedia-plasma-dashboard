@@ -1,3 +1,4 @@
+
 name := "mmplasmadash"
  
 version := "1.0" 
@@ -35,3 +36,23 @@ libraryDependencies ++= Seq(
   "io.circe" %% "circe-generic",
   "io.circe" %% "circe-parser"
 ).map(_ % circeVersion)
+
+debianPackageDependencies := Seq("openjdk-8-jre-headless")
+serverLoading in Debian := Some(ServerLoader.Systemd)
+serviceAutostart in Debian := false
+
+version in Debian := s"${version.value}-${sys.env.getOrElse("CIRCLE_BUILD_NUM","SNAPSHOT")}"
+name in Debian := "plasmadash"
+
+maintainer := "Andy Gallagher <andy.gallagher@theguardian.com>"
+packageSummary := "A dashboard to search for media atoms not attached to asset management"
+packageDescription := """A dashboard to search for media atoms not attached to asset management"""
+riffRaffPackageType := (packageBin in Debian).value
+riffRaffUploadArtifactBucket := Option("riffraff-artifact")
+riffRaffUploadManifestBucket := Option("riffraff-builds")
+riffRaffManifestBranch := sys.env.getOrElse("CIRCLE_BRANCH","unknown")
+riffRaffManifestRevision := sys.env.getOrElse("CIRCLE_BUILD_NUM","SNAPSHOT")
+riffRaffManifestVcsUrl := sys.env.getOrElse("CIRCLE_BUILD_URL", "")
+riffRaffBuildIdentifier := sys.env.getOrElse("CIRCLE_BUILD_NUM", "SNAPSHOT")
+riffRaffPackageName := "plasmadash"
+riffRaffManifestProjectName := "multimedia:plasmadash"
