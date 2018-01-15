@@ -198,13 +198,28 @@ Resources:
           chown mmplasmadash /usr/share/mmplasmadash
 
           cat > /usr/share/mmplasmadash/conf/application.conf << EOF
+          play.filters {
+
+            # Enabled filters are run automatically against Play.
+            # CSRFFilter, AllowedHostFilters, and SecurityHeadersFilters are enabled by default.
+            enabled += filters.ExampleFilter
+
+            hosts {
+              allowed = [".${AWS::Region}.elb.amazonaws.com","localhost:9000"]
+            }
+
+            # Disabled filters remove elements from the enabled list.
+            disabled += play.filters.headers.SecurityHeadersFilter
+          //  disabled += play.filters.hosts.AllowedHostsFilter
+          //  disabled += play.filters.csrf.CSRFFilter
+          }
           unattached_atoms_table = ${UnattachedAtomsTableName}
           region = ${AWS::Region}
           EOF
 
           cat > /etc/default/mmplasmadash << EOF
           #exiting on out of memory error should cause either systemd or autoscaling group to restart us
-          JAVA_OPTS="-XX:+ExitOnOutOfMemoryError -Dplay.http.secret.key=${SecretString} -javaagent:/usr/share/mmplasmadash/newrelic/newrelic.jar -Dconfig.file=/usr/share/plasmadash/conf/application.conf"
+          JAVA_OPTS="-XX:+ExitOnOutOfMemoryError -Dplay.http.secret.key=${SecretString} -javaagent:/usr/share/mmplasmadash/newrelic/newrelic.jar -Dconfig.file=/usr/share/mmplasmadash/conf/application.conf"
           EOF
 
           systemctl restart mmplasmadash

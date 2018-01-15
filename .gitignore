@@ -15,3 +15,5 @@ dist
 /.settings
 !/frontend/yarn.lock
 /public/javascripts/bundle.js
+/frontend/node_modules/
+/frontend/junit.xml

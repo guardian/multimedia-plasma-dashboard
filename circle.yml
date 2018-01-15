@@ -31,4 +31,5 @@ deployment:
   riffraff_deploy:
     branch: /.*/
     commands:
+      - cd frontend; npm run build
       - sbt riffRaffUpload
