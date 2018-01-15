@@ -26,7 +26,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 @Singleton
 class DataController @Inject()(cc:ControllerComponents,config:Configuration,system:ActorSystem) extends AbstractController (cc){
-  private val region = config.getString("region")
+  private val region = config.get[String]("region")
 
   protected def getClient:AmazonDynamoDB = {
     val chain = new AWSCredentialsProviderChain(
@@ -38,11 +38,11 @@ class DataController @Inject()(cc:ControllerComponents,config:Configuration,syst
 
     AmazonDynamoDBClientBuilder.standard()
       .withCredentials(chain)
-      .withRegion(region.getOrElse("eu-west-1"))
+      .withRegion(region)
       .build()
   }
 
-  val tableName: Option[String] = config.getString("UnattachedAtomsTable")
+  val tableName: Option[String] = config.get[Option[String]]("UnattachedAtomsTable")
 
   def makeResult(result:List[Either[DynamoReadError, UnattachedAtom]]) = {
     Logger.info(s"$result")
@@ -66,6 +66,7 @@ class DataController @Inject()(cc:ControllerComponents,config:Configuration,syst
 
       val table = Table[UnattachedAtom](tableName.get)
       val userIndex = table.index("userIndex")
+
 //      val queryParams = request.queryString.map {
 //        case ("user", v) => Some(userIndex.query('userEmail -> v.mkString))
 //        //      case("daterange",v)=>
@@ -81,6 +82,8 @@ class DataController @Inject()(cc:ControllerComponents,config:Configuration,syst
     Logger.info(s"unattached atoms table is $tableName")
 
     val client = getClient
+
+    val bounds = Bounds(Bound("2018-01-01T00:00:00Z"),Bound("2018-12-31T23:59:59Z"))
 
     val table = Table[UnattachedAtom](tableName.get)
     makeResult(Scanamo.exec(client)(table.scan()))
