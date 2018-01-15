@@ -44,6 +44,28 @@ class DataController @Inject()(cc:ControllerComponents,config:Configuration,syst
 
   val tableName: Option[String] = config.get[Option[String]]("UnattachedAtomsTable")
 
+  def boundsFromQueryArg(queryString:Map[String,Seq[String]]):Option[Bounds[String]] = {
+    val lastDayOfMonth = Seq (31, 29, 31, 30, 30, 31, 31, 30, 31, 31, 30, 31)
+
+    queryString.get("month").map(monthStringSeq=>{
+      val monthstring = monthStringSeq.mkString ("")
+      val ym = monthstring.split ("_")
+      val year = ym.head
+      val month = ym (1).toInt
+
+      val startString = f"$year-$month%02d-01T00:00:00Z"
+      val lastDay = lastDayOfMonth (month - 1)
+      val endString = f"$year-$month%02d-${
+        lastDay
+      }T23:59:59.999Z"
+
+      Logger.info (s"startString $startString")
+      Logger.info (s"endString $endString")
+
+      Bounds (Bound (startString), Bound (endString) )
+    })
+  }
+
   def makeResult(result:List[Either[DynamoReadError, UnattachedAtom]]) = {
     //https://stackoverflow.com/questions/7230999/how-to-reduce-a-seqeithera-b-to-a-eithera-seqb
     val processed_result = result collectFirst { case x@Left(_) => x } getOrElse Right(result collect { case Right(x) => x })
@@ -57,24 +79,21 @@ class DataController @Inject()(cc:ControllerComponents,config:Configuration,syst
     }
   }
 
-    def forUser(user:String) = Action { implicit request=>
-      Logger.info(s"unattached atoms table is $tableName")
+  def forUser(user:String) = Action { implicit request=>
+    Logger.info(s"unattached atoms table is $tableName")
 
-      val client = getClient
+    val client = getClient
 
-      val table = Table[UnattachedAtom](tableName.get)
+    val table = Table[UnattachedAtom](tableName.get)
 
-
-//      val queryParams = request.queryString.map {
-//        case ("user", v) => Some(userIndex.query('userEmail -> v.mkString))
-//        //      case("daterange",v)=>
-//        //        val complete=v.mkString
-//        //        val bounds=complete.split(",")
-//        //        Between('dateCreated, Bounds(Bound(bounds.head),Bound(bounds(1))))
-//        case _ => None
-//      }.filter(_.isDefined)
-      makeResult(Scanamo.exec(client)(table.query('userEmail->user)))
+    boundsFromQueryArg(request.queryString) match {
+      case Some(bounds)=>
+        makeResult(Scanamo.exec(client)(table.query('userEmail->user and ('dateCreated between bounds))))
+      case None=>
+        makeResult(Scanamo.exec(client)(table.query('userEmail->user)))
     }
+
+  }
 
   def all = Action { implicit request =>
     Logger.info(s"unattached atoms table is $tableName")
@@ -84,23 +103,8 @@ class DataController @Inject()(cc:ControllerComponents,config:Configuration,syst
     val table = Table[UnattachedAtom](tableName.get)
     val dateIndex = table.index("dateIndex")
 
-    val lastDayOfMonth = Seq(31, 29, 31, 30, 30, 31, 31, 30, 31, 31, 30, 31)
-
-    request.queryString.get("month") match {
-      case Some(monthStringSeq)=>
-        val monthstring = monthStringSeq.mkString("")
-        val ym = monthstring.split("_")
-        val year=ym.head
-        val month=ym(1).toInt
-
-        val startString = f"$year-$month%02d-01T00:00:00Z"
-        val lastDay = lastDayOfMonth(month-1)
-        val endString = f"$year-$month%02d-${lastDay}T23:59:59.999Z"
-
-        Logger.info(s"startString $startString")
-        Logger.info(s"endString $endString")
-
-        val bounds = Bounds(Bound(startString),Bound(endString))
+    boundsFromQueryArg(request.queryString) match {
+      case Some(bounds)=>
         makeResult(Scanamo.exec(client)(dateIndex.query('dummy->"n" and ('dateCreated between bounds))))
       case None=>
         makeResult(Scanamo.exec(client)(table.scan()))

@@ -2,11 +2,14 @@ import React from 'react';
 import SortableTable from 'react-sortable-table';
 import moment from 'moment';
 import PropTypes from 'prop-types';
+import FilterButton from './FilterButton.jsx';
 
 class DataTable extends React.Component {
     static propTypes = {
         dateFormat: PropTypes.string,
-        inputData: PropTypes.object.isRequired
+        inputData: PropTypes.object.isRequired,
+        userFilterActivated: PropTypes.func.isRequired,
+        userFilterDeactivated: PropTypes.func.isRequired,
     };
 
     constructor(props){
@@ -27,12 +30,20 @@ class DataTable extends React.Component {
             {
                 header: "Atom ID",
                 headerProps: {className: "dashboardheader"},
-                key: "AtomID"
+                key: "AtomID",
+                render: (atomid)=><a href={"https://video.gutools.co.uk/videos/" + atomid} target="_blank">{atomid}</a>
             },
             {
                 header: "User",
                 headerProps: {className: "dashboardheader"},
-                key: "userEmail"
+                key: "userEmail",
+                render: (user)=><span><FilterButton fieldName="userEmail" values={user} type="plus"
+                                                    onActivate={this.props.userFilterActivated}
+                                                    onDeactivate={this.props.userFilterDeactivated}
+                                                    isActive={this.props.hasUserFilter}
+                                        />
+                    {user}
+                                </span>
             },
             {
                 header: "Date Updated",

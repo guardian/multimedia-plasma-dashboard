@@ -115,6 +115,12 @@ label {
     margin-right: 0.5em;
 }
 
+i.control-icon {
+    cursor: pointer;
+    padding-right: 4px;
+}
+
+
 /* this requires CSS 3.0*/
 /*https://stackoverflow.com/questions/4108726/how-to-spread-elements-evenly-horizonatly*/
 .controls-banner {

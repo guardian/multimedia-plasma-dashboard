@@ -19,7 +19,7 @@ class MonthSelector extends GenericSelector {
         let buildopts = [];
 
         const untilYear = this.props.toYear ? this.props.toYear : (new Date).getYear()+1900;
-        const untilMonth = this.props.toMonth ? this.props.toMonth : (new Date).getMonth();
+        const untilMonth = this.props.toMonth ? this.props.toMonth-1: (new Date).getMonth();
 
         for(let year=2017; year<=untilYear; ++year){
             for(let month=0; month<12; ++month){

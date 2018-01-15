@@ -19,14 +19,13 @@ describe("GenericSelector", ()=>{
         const rendered=shallow(<TestSelector onSelectorChange={mockChange} label="test entry" internalName="id_test_entry"/>);
 
         const selector = rendered.find("select");
-        expect(selector.childAt(0).props().name).toEqual("option_1");
-        expect(selector.childAt(0).props().selected).toBeFalsy();
+        expect(selector.childAt(0).props().value).toEqual("option_1");
         expect(selector.childAt(0).text()).toEqual("Option 1");
 
-        expect(selector.childAt(1).props().name).toEqual("option_2");
-        expect(selector.childAt(1).props().selected).toBeTruthy();
+        expect(selector.childAt(1).props().value).toEqual("option_2");
         expect(selector.childAt(1).text()).toEqual("Option 2");
 
+        expect(selector.props().defaultValue).toEqual("option_2");
         expect(selector.children().length).toEqual(2);
 
         expect(selector.props().id).toEqual("id_test_entry");

@@ -17,7 +17,8 @@ class MainPage extends React.Component {
 
         this.searchTypeUpdate = this.searchTypeUpdate.bind(this);
         this.monthFilterUpdate = this.monthFilterUpdate.bind(this);
-        this.userFilterUpdate = this.userFilterUpdate.bind(this);
+        this.userFilterActivated = this.userFilterActivated.bind(this);
+        this.userFilterDeactivated = this.userFilterDeactivated.bind(this);
         this.atomFilterUpdate = this.atomFilterUpdate.bind(this);
     }
 
@@ -26,13 +27,13 @@ class MainPage extends React.Component {
             month: this.state.monthFilter ? this.state.monthFilter : null
         };
 
-        //const filtered_params = Object.keys(params).filter(key=>params[key]).reduce((acc,key)=>(acc[key]=params[key], acc), {});
-
         const param_string = Object.keys(params)
             .filter(key=>params[key])
             .reduce((acc,key)=>acc + "&" + key + "=" + params[key], "");
 
-        axios.get("/unattached-atoms/all?" + param_string.slice(1)).then(response=>{
+        const endpoint = this.state.userFilter ? "forUser/" + this.state.userFilter : "all";
+
+        axios.get("/unattached-atoms/" + endpoint + "?" + param_string.slice(1)).then(response=>{
             this.setState({rawData: response.data});
         }).catch(error=>console.error(error));
     }
@@ -51,8 +52,14 @@ class MainPage extends React.Component {
         this.setState({monthFilter: newValue, rawData: []},()=>this.loadData());
     }
 
-    userFilterUpdate(newValue){
+    userFilterActivated(fieldname, newValue){
+        console.log("user filter activated");
+        this.setState({userFilter: newValue, rawData: []}, ()=>this.loadData());
+    }
 
+    userFilterDeactivated(fieldname, newValue){
+        console.log("user filter deactivated");
+        this.setState({userFilter: null, rawData: []}, ()=>this.loadData());
     }
 
     atomFilterUpdate(newValue){
@@ -65,7 +72,11 @@ class MainPage extends React.Component {
                             monthChanged={this.monthFilterUpdate}
                             userChanged={this.userFilterUpdate}
                             atomEntryChanged={this.atomFilterUpdate}/>
-            <DataTable inputData={this.state.rawData}/>
+            <DataTable inputData={this.state.rawData}
+                       userFilterDeactivated={this.userFilterDeactivated}
+                       userFilterActivated={this.userFilterActivated}
+                       hasUserFilter={this.state.userFilter!==null}
+            />
         </div>)
     }
 }
