@@ -1,9 +1,8 @@
-
 name := "mmplasmadash"
  
 version := "1.0" 
       
-lazy val `mmplasmadash` = (project in file(".")).enablePlugins(PlayScala)
+lazy val `mmplasmadash` = (project in file(".")).enablePlugins(PlayScala, RiffRaffArtifact, SystemdPlugin)
 
 resolvers += "scalaz-bintray" at "https://dl.bintray.com/scalaz/releases"
       
