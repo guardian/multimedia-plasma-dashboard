@@ -4,6 +4,8 @@ import { BrowserRouter, Route, Switch } from 'react-router-dom';
 
 import MainPage from './MainPage.jsx';
 
+window.React = require('react');
+
 class App extends React.Component {
     render () {
         return(<Switch>

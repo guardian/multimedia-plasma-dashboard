@@ -25,5 +25,11 @@ describe("MonthSelector", ()=>{
             {"external": "Mar 2018", "internal": "2018_3"},
             {"external": "Apr 2018", "internal": "2018_4"},
             ]);
+    });
+    
+    test("if nothing provided then MonthSelector should not render empty", ()=>{
+        const rendered=shallow(<MonthSelector onSelectorChange={null} label="Month" internalName="id_month_selector"/>);
+
+        expect(rendered.instance().valueList.length>1).toBeTruthy();
     })
 });

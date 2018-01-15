@@ -112,9 +112,14 @@ tr.dashboardheader, th.dashboardheader {
     cursor: pointer;
 }
 
+label {
+    margin-right: 0.5em;
+}
+
 /* this requires CSS 3.0*/
 /*https://stackoverflow.com/questions/4108726/how-to-spread-elements-evenly-horizonatly*/
 .controls-banner {
     display: flex;
     justify-content: space-between;
+    margin-bottom: 1em;
 }

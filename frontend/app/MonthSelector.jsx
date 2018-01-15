@@ -14,19 +14,16 @@ class MonthSelector extends GenericSelector {
 
     constructor(props){
         super(props);
-        this.state = {
-            currentlySelected: 'date'
-        };
 
         const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'July', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
         let buildopts = [];
 
-        const untilYear = this.props.toYear ? this.props.toYear : (new Date).getYear();
+        const untilYear = this.props.toYear ? this.props.toYear : (new Date).getYear()+1900;
         const untilMonth = this.props.toMonth ? this.props.toMonth : (new Date).getMonth();
 
         for(let year=2017; year<=untilYear; ++year){
             for(let month=0; month<12; ++month){
-                if(year===untilYear && month>=untilMonth) break;
+                if(year===untilYear && month>untilMonth) break;
                 buildopts.push({
                     internal: year.toString() + "_" + (month+1).toString(),
                     external: months[month] + " " + year.toString()
@@ -35,6 +32,10 @@ class MonthSelector extends GenericSelector {
         }
 
         this.valueList = buildopts;
+
+        this.state = {
+            currentlySelected: untilYear.toString() + "_" + (untilMonth+1).toString()
+        };
     }
 }
 
