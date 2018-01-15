@@ -22,17 +22,20 @@ class GenericSelector extends React.Component {
     }
 
     selectorChanged(event){
-        this.setState({currentlySelected: event.target.value}, ()=>{
-            this.props.onSelectorChange(event.target.value);  //only update the parent when we've finished updating our own state
+        console.log("selector " + this.props.internalName + " changed to " + event.target.value);
+
+        const newValue = event.target.value; //need to do this in order to access event.target in the callback below, as the event has been freed then
+        this.setState({currentlySelected: newValue}, ()=>{
+            this.props.onSelectorChange(newValue);  //only update the parent when we've finished updating our own state
         });
     }
 
     render(){
         return <span>
             <label htmlFor={this.props.internalName}>{this.props.label}</label>
-            <select id={this.props.internalName} onChange={this.selectorChanged}>
+            <select id={this.props.internalName} onChange={this.selectorChanged} defaultValue={this.state.currentlySelected}>
             {this.valueList.map(value=>
-                <option name={value.internal} selected={this.state.currentlySelected===value.internal}>{value.external}</option>
+                <option value={value.internal}>{value.external}</option>
             )}
         </select>
         </span>

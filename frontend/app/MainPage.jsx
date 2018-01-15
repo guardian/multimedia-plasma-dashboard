@@ -22,7 +22,17 @@ class MainPage extends React.Component {
     }
 
     loadData(){
-        axios.get("/unattached-atoms/all").then(response=>{
+        const params = {
+            month: this.state.monthFilter ? this.state.monthFilter : null
+        };
+
+        //const filtered_params = Object.keys(params).filter(key=>params[key]).reduce((acc,key)=>(acc[key]=params[key], acc), {});
+
+        const param_string = Object.keys(params)
+            .filter(key=>params[key])
+            .reduce((acc,key)=>acc + "&" + key + "=" + params[key], "");
+
+        axios.get("/unattached-atoms/all?" + param_string.slice(1)).then(response=>{
             this.setState({rawData: response.data});
         }).catch(error=>console.error(error));
     }
@@ -30,12 +40,15 @@ class MainPage extends React.Component {
     componentWillMount(){
         this.loadData();
     }
+
     searchTypeUpdate(newValue){
 
     }
 
     monthFilterUpdate(newValue){
+        console.log("monthFilterUpdate: " + newValue);
 
+        this.setState({monthFilter: newValue, rawData: []},()=>this.loadData());
     }
 
     userFilterUpdate(newValue){

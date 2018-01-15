@@ -45,8 +45,6 @@ class DataController @Inject()(cc:ControllerComponents,config:Configuration,syst
   val tableName: Option[String] = config.get[Option[String]]("UnattachedAtomsTable")
 
   def makeResult(result:List[Either[DynamoReadError, UnattachedAtom]]) = {
-    Logger.info(s"$result")
-
     //https://stackoverflow.com/questions/7230999/how-to-reduce-a-seqeithera-b-to-a-eithera-seqb
     val processed_result = result collectFirst { case x@Left(_) => x } getOrElse Right(result collect { case Right(x) => x })
 
@@ -65,7 +63,7 @@ class DataController @Inject()(cc:ControllerComponents,config:Configuration,syst
       val client = getClient
 
       val table = Table[UnattachedAtom](tableName.get)
-      val userIndex = table.index("userIndex")
+
 
 //      val queryParams = request.queryString.map {
 //        case ("user", v) => Some(userIndex.query('userEmail -> v.mkString))
@@ -75,7 +73,7 @@ class DataController @Inject()(cc:ControllerComponents,config:Configuration,syst
 //        //        Between('dateCreated, Bounds(Bound(bounds.head),Bound(bounds(1))))
 //        case _ => None
 //      }.filter(_.isDefined)
-      makeResult(Scanamo.exec(client)(userIndex.query('userEmail->user)))
+      makeResult(Scanamo.exec(client)(table.query('userEmail->user)))
     }
 
   def all = Action { implicit request =>
@@ -83,9 +81,30 @@ class DataController @Inject()(cc:ControllerComponents,config:Configuration,syst
 
     val client = getClient
 
-    val bounds = Bounds(Bound("2018-01-01T00:00:00Z"),Bound("2018-12-31T23:59:59Z"))
-
     val table = Table[UnattachedAtom](tableName.get)
-    makeResult(Scanamo.exec(client)(table.scan()))
+    val dateIndex = table.index("dateIndex")
+
+    val lastDayOfMonth = Seq(31, 29, 31, 30, 30, 31, 31, 30, 31, 31, 30, 31)
+
+    request.queryString.get("month") match {
+      case Some(monthStringSeq)=>
+        val monthstring = monthStringSeq.mkString("")
+        val ym = monthstring.split("_")
+        val year=ym.head
+        val month=ym(1).toInt
+
+        val startString = f"$year-$month%02d-01T00:00:00Z"
+        val lastDay = lastDayOfMonth(month-1)
+        val endString = f"$year-$month%02d-${lastDay}T23:59:59.999Z"
+
+        Logger.info(s"startString $startString")
+        Logger.info(s"endString $endString")
+
+        val bounds = Bounds(Bound(startString),Bound(endString))
+        makeResult(Scanamo.exec(client)(dateIndex.query('dummy->"n" and ('dateCreated between bounds))))
+      case None=>
+        makeResult(Scanamo.exec(client)(table.scan()))
+    }
+
   }
 }
