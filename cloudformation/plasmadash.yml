@@ -42,6 +42,9 @@ Parameters:
   NewRelicLicense:
     Description: License ID for New Relic
     Type: String
+  SecretString:
+    Description: Long random string to use as an application secret
+    Type: String
   #FIXME: replace this with a reference to the deployed launch detector stack
   UnattachedAtomsTable:
     Description: ARN of Dynamo table to look at
@@ -171,12 +174,12 @@ Resources:
           dpkg --install "${!MOST_RECENT_PACKAGE}"
 
           aws s3 cp s3://gnm-multimedia-deployables/newrelic-java-3.43.0.zip /tmp
-          mkdir -p /usr/share/multimedia-launchdetector-v3/newrelic/logs
-          chown multimedia-launchdetector-v3 /usr/share/multimedia-launchdetector-v3/newrelic/logs
-          cd /usr/share/multimedia-launchdetector-v3
+          mkdir -p /usr/share/mmplasmadash/newrelic/logs
+          chown mmplasmadash /usr/share/mmplasmadash/newrelic/logs
+          cd /usr/share/mmplasmadash
           unzip /tmp/newrelic-java-3.43.0.zip
 
-          cat > /usr/share/multimedia-launchdetector-v3/newrelic/newrelic.yml << EOF
+          cat > /usr/share/mmplasmadash/newrelic/newrelic.yml << EOF
           common: &default_settings
             license_key: '${NewRelicLicense}'
             agent_enabled: true
@@ -191,18 +194,20 @@ Resources:
               Stage: ${Stage}
           EOF
 
-          mkdir -p /usr/share/plasmadash/conf
-          cat > /usr/share/plasmadash/conf/application.conf << EOF
+          mkdir -p /usr/share/mmplasmadash/conf
+          chown mmplasmadash /usr/share/mmplasmadash
+
+          cat > /usr/share/mmplasmadash/conf/application.conf << EOF
           unattached_atoms_table = ${UnattachedAtomsTableName}
           region = ${AWS::Region}
           EOF
 
-          cat > /etc/default/plasmadash << EOF
+          cat > /etc/default/mmplasmadash << EOF
           #exiting on out of memory error should cause either systemd or autoscaling group to restart us
-          JAVA_OPTS="-XX:+ExitOnOutOfMemoryError -javaagent:/usr/share/multimedia-launchdetector-v3/newrelic/newrelic.jar -Dconfig.file=/usr/share/plasmadash/conf/application.conf"
+          JAVA_OPTS="-XX:+ExitOnOutOfMemoryError -Dplay.http.secret.key=${SecretString} -javaagent:/usr/share/mmplasmadash/newrelic/newrelic.jar -Dconfig.file=/usr/share/plasmadash/conf/application.conf"
           EOF
 
-          systemctl restart plasmadash
+          systemctl restart mmplasmadash
   AutoScaleGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
