@@ -2,7 +2,7 @@ stacks: [multimedia]
 regions: [eu-west-1]
 
 deployments:
-  launchdetector:
+  plasmadash:
     type: autoscaling
     app: plasmadash
     parameters:

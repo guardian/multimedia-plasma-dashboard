@@ -46,6 +46,9 @@ Parameters:
   UnattachedAtomsTable:
     Description: ARN of Dynamo table to look at
     Type: String
+  UnattachedAtomsTableName:
+    Description: Name of the Dynamo table to look at
+    Type: String
 Resources:
   LoadBalancerSG:
     Type: AWS::EC2::SecurityGroup
@@ -195,7 +198,8 @@ Resources:
           EOF
 
           cat > /etc/default/plasmadash << EOF
-          JAVA_OPTS="-javaagent:/usr/share/multimedia-launchdetector-v3/newrelic/newrelic.jar -Dconfig.file=/usr/share/plasmadash/conf/application.conf"
+          #exiting on out of memory error should cause either systemd or autoscaling group to restart us
+          JAVA_OPTS="-XX:+ExitOnOutOfMemoryError -javaagent:/usr/share/multimedia-launchdetector-v3/newrelic/newrelic.jar -Dconfig.file=/usr/share/plasmadash/conf/application.conf"
           EOF
 
           systemctl restart plasmadash
