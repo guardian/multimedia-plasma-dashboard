@@ -42,9 +42,14 @@ pre {
 }
 
 p.descriptive { font-size:0.8em; margin:0; padding:0; }
+a.headinglink {color: blue;
+    text-align: right;
+    font-weight: bold;
+    padding-left: 0.5em;
+}
 a:link { color: #00f; text-decoration: none }
 a:visited { color: #009; }
-a:hover { color: #06f; text-decoration: underline; }
+a:hover { color: #06f; text-decoration: underline; cursor: pointer}
 a:active { color: #0cf; text-decoration: underline; }
 
 td { vertical-align: top; }
