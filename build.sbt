@@ -36,6 +36,8 @@ libraryDependencies ++= Seq(
   "io.circe" %% "circe-parser"
 ).map(_ % circeVersion)
 
+//panda
+libraryDependencies +="com.gu" %% "hmac-headers" % "1.1"
 debianPackageDependencies := Seq("openjdk-8-jre-headless")
 serverLoading in Debian := Some(ServerLoader.Systemd)
 serviceAutostart in Debian := false

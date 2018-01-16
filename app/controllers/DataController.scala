@@ -22,6 +22,9 @@ import io.circe._
 import io.circe.generic.auto._
 import io.circe.parser._
 import io.circe.syntax._
+import helpers.RequestSigner
+import akka.http.scaladsl.Http
+import akka.http.scaladsl.model._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -131,5 +134,15 @@ class DataController @Inject()(cc:ControllerComponents,config:Configuration,syst
   def getConfiguration = Action {
     val responsedata=ConfigResponse(config.get[String]("AtomToolDomain"))
     Ok(responsedata.asJson.toString)
+  }
+
+  def plutoResync = AsyncAction {
+    val atomToolDomain = config.get[String]("AtomToolDomain")
+    val atomToolSecret = config.get[String]("AtomToolSharedSecret")
+
+    val request = HttpRequest(HttpMethods.POST,s"https://$atomToolDomain/")
+    val responseFuture = Http().singleRequest(request)
+
+    Future(Ok())
   }
 }

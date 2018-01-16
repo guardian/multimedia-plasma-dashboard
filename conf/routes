@@ -13,6 +13,8 @@ GET     /message                    controllers.AsyncController.message
 GET     /unattached-atoms/all       @controllers.DataController.all
 GET     /unattached-atoms/forUser/:user @controllers.DataController.forUser(user)
 
+PUT     /pluto-resync/:atomId       @controllers.DataController.plutoResync
+
 GET     /systemconfig               @controllers.DataController.getConfiguration
 
 GET     /is-online                  controllers.Healthcheck.simple

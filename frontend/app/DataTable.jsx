@@ -1,5 +1,6 @@
 import React from 'react';
 import SortableTable from 'react-sortable-table';
+import ResyncControl from './ResyncControl.jsx'
 import moment from 'moment';
 import PropTypes from 'prop-types';
 import FilterButton from './FilterButton.jsx';
@@ -32,7 +33,10 @@ class DataTable extends React.Component {
                 header: "Atom ID",
                 headerProps: {className: "dashboardheader"},
                 key: "AtomID",
-                render: (atomid)=><a href={"https://"+ this.props.atomToolDomain + "/videos/" + atomid} target="_blank">{atomid}</a>
+                render: (atomid)=><span>
+                    <a href={"https://"+ this.props.atomToolDomain + "/videos/" + atomid} target="_blank">{atomid}</a>
+                    <ResyncControl atomId={atomid}/>
+                    </span>
             },
             {
                 header: "User",

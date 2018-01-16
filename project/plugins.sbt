@@ -1,6 +1,9 @@
 logLevel := Level.Warn
 
 resolvers += "Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/"
+// a, faster, alternative dependancy resolver to ivy
+// https://github.com/coursier/coursier#sbt-plugin
+addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.0-RC12")
 
 addSbtPlugin("com.typesafe.play" % "sbt-plugin" % "2.6.10")
 
