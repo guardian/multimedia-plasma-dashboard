@@ -67,7 +67,17 @@ class DataController @Inject()(cc:ControllerComponents,config:Configuration,syst
     })
   }
 
-  def makeResultNew[V](params:ScanamoOps[List[Either[DynamoReadError, V]]])(block: ScanamoOps[List[Either[DynamoReadError, V]]]=>List[Either[DynamoReadError, V]]) = {
+  def formatFinalResult(result:List[UnattachedAtom],accept:String) = {
+    if(accept=="application/json"){
+      Ok(result.asJson.toString)
+    } else if(accept=="text/plain"){
+      Ok(result.map(_.AtomID).mkString("\n"))
+    } else {
+      BadRequest(s"format $accept is not supported")
+    }
+  }
+
+  def makeResultNew[V](params:ScanamoOps[List[Either[DynamoReadError, V]]],accept:String="application/json")(block: ScanamoOps[List[Either[DynamoReadError, V]]]=>List[Either[DynamoReadError, V]]) = {
     try {
       val result = block(params)
       val processed_result = result collectFirst { case x@Left(_) => x } getOrElse Right(result collect { case Right(x) => x })
@@ -77,7 +87,7 @@ class DataController @Inject()(cc:ControllerComponents,config:Configuration,syst
           val response = ErrorResponse("error", error.toString)
           InternalServerError(response.asJson.toString)
         case Right(atomList: List[UnattachedAtom]) =>
-          Ok(atomList.asJson.toString)
+          formatFinalResult(atomList, accept)
       }
     } catch {
       case excep:Any=>
@@ -88,6 +98,21 @@ class DataController @Inject()(cc:ControllerComponents,config:Configuration,syst
     }
   }
 
+  def removeParams(acceptFormat:String) = {
+    val splitout = acceptFormat.split(";")
+    splitout.head
+  }
+
+  def findPreferredFormat(acceptString:String):String = {
+    val possibleAccept = acceptString.split("\\s*,\\s*").map(removeParams(_))
+
+    if(possibleAccept.contains("application/json")) return "application/json"
+    if(possibleAccept.contains("text/plain")) return "text/plain"
+    if(possibleAccept.contains("text/*")) return "text/plain"
+    if(possibleAccept.contains("*/*")) return "application/json"
+    possibleAccept.head
+  }
+
   def forUser(user:String) = Action { implicit request=>
     Logger.info(s"unattached atoms table is $tableName")
 
@@ -95,13 +120,15 @@ class DataController @Inject()(cc:ControllerComponents,config:Configuration,syst
 
     val table = Table[UnattachedAtom](tableName.get)
 
+    val accept=findPreferredFormat(request.headers.get("Accept").getOrElse("application/json"))
+
     boundsFromQueryArg(request.queryString) match {
       case Some(bounds)=>
-        makeResultNew[UnattachedAtom](table.query('userEmail->user and ('dateCreated between bounds))){ params=>
+        makeResultNew[UnattachedAtom](table.query('userEmail->user and ('dateCreated between bounds)),accept){ params=>
           Scanamo.exec(client)(params)
         }
       case None=>
-        makeResultNew[UnattachedAtom](table.query('userEmail->user)) { params =>
+        makeResultNew[UnattachedAtom](table.query('userEmail->user),accept) { params =>
           Scanamo.exec(client)(params)
         }
     }
@@ -115,14 +142,15 @@ class DataController @Inject()(cc:ControllerComponents,config:Configuration,syst
 
     val table = Table[UnattachedAtom](tableName.get)
     val dateIndex = table.index("dateIndex")
+    val accept=findPreferredFormat(request.headers.get("Accept").getOrElse("application/json"))
 
     boundsFromQueryArg(request.queryString) match {
       case Some(bounds)=>
-        makeResultNew[UnattachedAtom](dateIndex.query('dummy->"n" and ('dateCreated between bounds))) { params =>
+        makeResultNew[UnattachedAtom](dateIndex.query('dummy->"n" and ('dateCreated between bounds)),accept) { params =>
           Scanamo.exec(client)(params)
         }
       case None=>
-        makeResultNew[UnattachedAtom](null) { params =>
+        makeResultNew[UnattachedAtom](null,accept) { params =>
           Scanamo.exec(client)(table.scan())
         }
     }
