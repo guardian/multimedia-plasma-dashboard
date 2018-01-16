@@ -19,6 +19,7 @@ libraryDependencies ++= Seq(
   "com.gu" %% "scanamo" % "1.0.0-M2" exclude("commons-logging","commons-logging")
 )
 
+
 //logging
 libraryDependencies ++= Seq(
   // https://mvnrepository.com/artifact/ch.qos.logback/logback-classic
@@ -37,7 +38,7 @@ libraryDependencies ++= Seq(
 ).map(_ % circeVersion)
 
 //panda
-libraryDependencies +="com.gu" %% "hmac-headers" % "1.1"
+libraryDependencies +="com.gu" %% "hmac-headers" % "1.0"
 debianPackageDependencies := Seq("openjdk-8-jre-headless")
 serverLoading in Debian := Some(ServerLoader.Systemd)
 serviceAutostart in Debian := false

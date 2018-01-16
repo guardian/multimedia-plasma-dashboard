@@ -1,8 +1,14 @@
 package helpers
 
 import java.net.URI
-import com.gu.hmac.HMACHeaders
+import javax.inject.{Inject, Singleton}
 
-object RequestSigner extends HMACHeaders {
+import com.gu.hmac.HMACHeaders
+import play.api.Configuration
+
+@Singleton
+class RequestSigner @Inject() (config:Configuration) extends HMACHeaders {
+  val secret=config.get[String]("AtomToolSharedSecret")
+
 
 }
