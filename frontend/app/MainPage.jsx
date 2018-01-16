@@ -1,6 +1,7 @@
 import React from 'react';
 import DataTable from './DataTable.jsx';
 import ControlsBanner from './ControlsBanner.jsx';
+import ErrorMessage from './ErrorMessage.jsx';
 import axios from 'axios';
 
 class MainPage extends React.Component {
@@ -12,7 +13,8 @@ class MainPage extends React.Component {
             monthFilter: null,
             userFilter: null,
             atomFilter: null,
-            rawData: []
+            rawData: [],
+            axiosError: null
         };
 
         this.searchTypeUpdate = this.searchTypeUpdate.bind(this);
@@ -34,8 +36,11 @@ class MainPage extends React.Component {
         const endpoint = this.state.userFilter ? "forUser/" + this.state.userFilter : "all";
 
         axios.get("/unattached-atoms/" + endpoint + "?" + param_string.slice(1)).then(response=>{
-            this.setState({rawData: response.data});
-        }).catch(error=>console.error(error));
+            this.setState({rawData: response.data, axiosError: null});
+        }).catch(error=> {
+                console.error(error);
+                this.setState({axiosError: error});
+            });
     }
 
     componentWillMount(){
@@ -72,6 +77,7 @@ class MainPage extends React.Component {
                             monthChanged={this.monthFilterUpdate}
                             userChanged={this.userFilterUpdate}
                             atomEntryChanged={this.atomFilterUpdate}/>
+            <ErrorMessage axiosError={this.state.axiosError}/>
             <DataTable inputData={this.state.rawData}
                        userFilterDeactivated={this.userFilterDeactivated}
                        userFilterActivated={this.userFilterActivated}

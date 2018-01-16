@@ -120,6 +120,7 @@ Resources:
              - dynamodb:GetItem
              - dynamodb:GetRecords
              - dynamodb:Query
+             - dynamodb:Scan
              Resource: !Ref UnattachedAtomsTable
       - PolicyName: DeployablesAccess
         PolicyDocument:
@@ -210,10 +211,10 @@ Resources:
 
             # Disabled filters remove elements from the enabled list.
             disabled += play.filters.headers.SecurityHeadersFilter
-          //  disabled += play.filters.hosts.AllowedHostsFilter
+            disabled += play.filters.hosts.AllowedHostsFilter
           //  disabled += play.filters.csrf.CSRFFilter
           }
-          unattached_atoms_table = ${UnattachedAtomsTableName}
+          UnattachedAtomsTable = ${UnattachedAtomsTableName}
           region = ${AWS::Region}
           EOF
 

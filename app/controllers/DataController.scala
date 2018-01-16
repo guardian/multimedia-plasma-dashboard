@@ -14,7 +14,8 @@ import akka.event.{DiagnosticLoggingAdapter, Logging}
 import com.amazonaws.auth.profile.ProfileCredentialsProvider
 import com.amazonaws.auth.{AWSCredentialsProviderChain, EnvironmentVariableCredentialsProvider, InstanceProfileCredentialsProvider}
 import com.amazonaws.services.dynamodbv2.{AmazonDynamoDB, AmazonDynamoDBClientBuilder}
-import com.gu.scanamo.error.DynamoReadError
+import com.gu.scanamo.error.{DynamoReadError, ScanamoError}
+import com.gu.scanamo.ops.ScanamoOps
 import com.gu.scanamo.query.{Between, Query}
 import play.api.Logger
 import io.circe._
@@ -66,6 +67,27 @@ class DataController @Inject()(cc:ControllerComponents,config:Configuration,syst
     })
   }
 
+  def makeResultNew[V](params:ScanamoOps[List[Either[DynamoReadError, V]]])(block: ScanamoOps[List[Either[DynamoReadError, V]]]=>List[Either[DynamoReadError, V]]) = {
+    try {
+      val result = block(params)
+      val processed_result = result collectFirst { case x@Left(_) => x } getOrElse Right(result collect { case Right(x) => x })
+
+      processed_result match {
+        case Left(error) =>
+          val response = ErrorResponse("error", error.toString)
+          InternalServerError(response.asJson.toString)
+        case Right(atomList: List[UnattachedAtom]) =>
+          Ok(atomList.asJson.toString)
+      }
+    } catch {
+      case excep:Any=>
+        Logger.error(excep.toString)
+        Logger.error(excep.getStackTrace.map(_.toString).mkString("\n"))
+        val response = ErrorResponse("generic error", excep.toString, stackTrace = Some(excep.getStackTrace.map(_.toString)))
+        InternalServerError(response.asJson.toString)
+    }
+  }
+
   def makeResult(result:List[Either[DynamoReadError, UnattachedAtom]]) = {
     //https://stackoverflow.com/questions/7230999/how-to-reduce-a-seqeithera-b-to-a-eithera-seqb
     val processed_result = result collectFirst { case x@Left(_) => x } getOrElse Right(result collect { case Right(x) => x })
@@ -88,9 +110,13 @@ class DataController @Inject()(cc:ControllerComponents,config:Configuration,syst
 
     boundsFromQueryArg(request.queryString) match {
       case Some(bounds)=>
-        makeResult(Scanamo.exec(client)(table.query('userEmail->user and ('dateCreated between bounds))))
+        makeResultNew[UnattachedAtom](table.query('userEmail->user and ('dateCreated between bounds))){ params=>
+          Scanamo.exec(client)(params)
+        }
       case None=>
-        makeResult(Scanamo.exec(client)(table.query('userEmail->user)))
+        makeResultNew[UnattachedAtom](table.query('userEmail->user)) { params =>
+          Scanamo.exec(client)(params)
+        }
     }
 
   }
@@ -105,9 +131,13 @@ class DataController @Inject()(cc:ControllerComponents,config:Configuration,syst
 
     boundsFromQueryArg(request.queryString) match {
       case Some(bounds)=>
-        makeResult(Scanamo.exec(client)(dateIndex.query('dummy->"n" and ('dateCreated between bounds))))
+        makeResultNew[UnattachedAtom](dateIndex.query('dummy->"n" and ('dateCreated between bounds))) { params =>
+          Scanamo.exec(client)(params)
+        }
       case None=>
-        makeResult(Scanamo.exec(client)(table.scan()))
+        makeResultNew[UnattachedAtom](null) { params =>
+          Scanamo.exec(client)(table.scan())
+        }
     }
 
   }
