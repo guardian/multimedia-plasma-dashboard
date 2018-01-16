@@ -3689,6 +3689,10 @@ react-dom@^15.4.2:
     object-assign "^4.1.0"
     prop-types "^15.5.10"
 
+react-file-download@^0.3.5:
+  version "0.3.5"
+  resolved "https://registry.yarnpkg.com/react-file-download/-/react-file-download-0.3.5.tgz#7a4e75874528806bfa53ddddd98b4da427d3a897"
+
 react-localstorage@^0.3.1:
   version "0.3.1"
   resolved "https://registry.yarnpkg.com/react-localstorage/-/react-localstorage-0.3.1.tgz#73b1d0622863eaff780a27f27004a3c0684d403b"

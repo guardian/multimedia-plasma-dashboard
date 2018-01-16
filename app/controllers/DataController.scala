@@ -4,8 +4,6 @@ import javax.inject._
 import akka.actor.ActorSystem
 import play.api.mvc._
 
-import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future, Promise}
 import com.gu.scanamo._
 import com.gu.scanamo.syntax._
 import models.{ErrorResponse,ConfigResponse, UnattachedAtom}
@@ -16,14 +14,10 @@ import com.amazonaws.auth.{AWSCredentialsProviderChain, EnvironmentVariableCrede
 import com.amazonaws.services.dynamodbv2.{AmazonDynamoDB, AmazonDynamoDBClientBuilder}
 import com.gu.scanamo.error.{DynamoReadError, ScanamoError}
 import com.gu.scanamo.ops.ScanamoOps
-import com.gu.scanamo.query.{Between, Query}
 import play.api.Logger
-import io.circe._
 import io.circe.generic.auto._
-import io.circe.parser._
 import io.circe.syntax._
 
-import scala.concurrent.ExecutionContext.Implicits.global
 
 @Singleton
 class DataController @Inject()(cc:ControllerComponents,config:Configuration,system:ActorSystem) extends AbstractController (cc){

@@ -2,6 +2,8 @@ import React from 'react';
 import DataTable from './DataTable.jsx';
 import ControlsBanner from './ControlsBanner.jsx';
 import ErrorMessage from './ErrorMessage.jsx';
+import DownloadOption from './DownloadOption.jsx';
+
 import axios from 'axios';
 
 class MainPage extends React.Component {
@@ -15,7 +17,8 @@ class MainPage extends React.Component {
             atomFilter: null,
             rawData: [],
             axiosError: null,
-            systemConfig: {AtomToolDomain: "unknown"}
+            systemConfig: {AtomToolDomain: "unknown"},
+            currentDataUrl: null
         };
 
         this.searchTypeUpdate = this.searchTypeUpdate.bind(this);
@@ -36,12 +39,15 @@ class MainPage extends React.Component {
 
         const endpoint = this.state.userFilter ? "forUser/" + this.state.userFilter : "all";
 
-        axios.get("/unattached-atoms/" + endpoint + "?" + param_string.slice(1)).then(response=>{
-            this.setState({rawData: response.data, axiosError: null});
-        }).catch(error=> {
-                console.error(error);
-                this.setState({axiosError: error});
-            });
+        this.setState({currentDataUrl: "/unattached-atoms/" + endpoint + "?" + param_string.slice(1)}, ()=>
+            axios.get(this.state.currentDataUrl).then(response=>{
+                this.setState({rawData: response.data, axiosError: null});
+            }).catch(error=> {
+                    console.error(error);
+                    this.setState({axiosError: error});
+                })
+        );
+
     }
 
     loadConfig(){
@@ -87,6 +93,7 @@ class MainPage extends React.Component {
                             monthChanged={this.monthFilterUpdate}
                             userChanged={this.userFilterUpdate}
                             atomEntryChanged={this.atomFilterUpdate}/>
+            <DownloadOption downloadUrl={this.state.currentDataUrl}/>
             <ErrorMessage axiosError={this.state.axiosError}/>
             <DataTable inputData={this.state.rawData}
                        userFilterDeactivated={this.userFilterDeactivated}
