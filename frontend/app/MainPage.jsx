@@ -14,7 +14,8 @@ class MainPage extends React.Component {
             userFilter: null,
             atomFilter: null,
             rawData: [],
-            axiosError: null
+            axiosError: null,
+            systemConfig: {AtomToolDomain: "unknown"}
         };
 
         this.searchTypeUpdate = this.searchTypeUpdate.bind(this);
@@ -43,8 +44,17 @@ class MainPage extends React.Component {
             });
     }
 
+    loadConfig(){
+        return axios.get("/systemconfig").then(response=>{
+            this.setState({systemConfig: response.data})
+        }).catch(error=>{
+            console.error(error);
+            this.setState({axiosError: error});
+        });
+    }
+
     componentWillMount(){
-        this.loadData();
+        this.loadConfig().then(()=>this.loadData());
     }
 
     searchTypeUpdate(newValue){
@@ -82,6 +92,7 @@ class MainPage extends React.Component {
                        userFilterDeactivated={this.userFilterDeactivated}
                        userFilterActivated={this.userFilterActivated}
                        hasUserFilter={this.state.userFilter!==null}
+                       atomToolDomain={this.state.systemConfig.AtomToolDomain}
             />
         </div>)
     }

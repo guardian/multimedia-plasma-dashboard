@@ -45,6 +45,12 @@ Parameters:
   SecretString:
     Description: Long random string to use as an application secret
     Type: String
+  AtomToolDomain:
+    Description: Hostname to contact the Media Atom Tool
+    Type: String
+  AtomToolSharedSecret:
+    Description: Shared secret for communicating with the Media Atom Tool
+    Type: String
   #FIXME: replace this with a reference to the deployed launch detector stack
   UnattachedAtomsTable:
     Description: ARN of Dynamo table to look at
@@ -121,7 +127,9 @@ Resources:
              - dynamodb:GetRecords
              - dynamodb:Query
              - dynamodb:Scan
-             Resource: !Ref UnattachedAtomsTable
+             Resource:
+             - !Ref UnattachedAtomsTable
+             - !Sub ${UnattachedAtomsTable}/index/*
       - PolicyName: DeployablesAccess
         PolicyDocument:
           Version: 2012-10-17
@@ -215,6 +223,8 @@ Resources:
           //  disabled += play.filters.csrf.CSRFFilter
           }
           UnattachedAtomsTable = ${UnattachedAtomsTableName}
+          AtomToolDomain = ${AtomToolDomain}
+          AtomToolSharedSecret = ${AtomToolSharedSecret}
           region = ${AWS::Region}
           EOF
 

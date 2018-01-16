@@ -13,6 +13,8 @@ GET     /message                    controllers.AsyncController.message
 GET     /unattached-atoms/all       @controllers.DataController.all
 GET     /unattached-atoms/forUser/:user @controllers.DataController.forUser(user)
 
+GET     /systemconfig               @controllers.DataController.getConfiguration
+
 GET     /is-online                  controllers.Healthcheck.simple
 
 # Map static resources from the /public folder to the /assets URL path

@@ -10,6 +10,7 @@ class DataTable extends React.Component {
         inputData: PropTypes.object.isRequired,
         userFilterActivated: PropTypes.func.isRequired,
         userFilterDeactivated: PropTypes.func.isRequired,
+        atomToolDomain: PropTypes.string.isRequired
     };
 
     constructor(props){
@@ -31,7 +32,7 @@ class DataTable extends React.Component {
                 header: "Atom ID",
                 headerProps: {className: "dashboardheader"},
                 key: "AtomID",
-                render: (atomid)=><a href={"https://video.gutools.co.uk/videos/" + atomid} target="_blank">{atomid}</a>
+                render: (atomid)=><a href={"https://"+ this.props.atomToolDomain + "/videos/" + atomid} target="_blank">{atomid}</a>
             },
             {
                 header: "User",

@@ -8,7 +8,7 @@ import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import com.gu.scanamo._
 import com.gu.scanamo.syntax._
-import models.{ErrorResponse, UnattachedAtom}
+import models.{ErrorResponse,ConfigResponse, UnattachedAtom}
 import play.api.Configuration
 import akka.event.{DiagnosticLoggingAdapter, Logging}
 import com.amazonaws.auth.profile.ProfileCredentialsProvider
@@ -88,19 +88,6 @@ class DataController @Inject()(cc:ControllerComponents,config:Configuration,syst
     }
   }
 
-  def makeResult(result:List[Either[DynamoReadError, UnattachedAtom]]) = {
-    //https://stackoverflow.com/questions/7230999/how-to-reduce-a-seqeithera-b-to-a-eithera-seqb
-    val processed_result = result collectFirst { case x@Left(_) => x } getOrElse Right(result collect { case Right(x) => x })
-
-    processed_result match {
-      case Left(error) =>
-        val response = ErrorResponse("error", error.toString)
-        InternalServerError(response.asJson.toString)
-      case Right(atomList: List[UnattachedAtom]) =>
-        Ok(atomList.asJson.toString)
-    }
-  }
-
   def forUser(user:String) = Action { implicit request=>
     Logger.info(s"unattached atoms table is $tableName")
 
@@ -139,6 +126,10 @@ class DataController @Inject()(cc:ControllerComponents,config:Configuration,syst
           Scanamo.exec(client)(table.scan())
         }
     }
+  }
 
+  def getConfiguration = Action {
+    val responsedata=ConfigResponse(config.get[String]("AtomToolDomain"))
+    Ok(responsedata.asJson.toString)
   }
 }
