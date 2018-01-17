@@ -51,6 +51,9 @@ Parameters:
   AtomToolSharedSecret:
     Description: Shared secret for communicating with the Media Atom Tool
     Type: String
+  LoadBalancerCert:
+    Description: ARN of an SSL certificate to allow https access to loadbalancer
+    Type: String
   #FIXME: replace this with a reference to the deployed launch detector stack
   UnattachedAtomsTable:
     Description: ARN of Dynamo table to look at
@@ -93,6 +96,11 @@ Resources:
           InstanceProtocol: "http"
           LoadBalancerPort: "80"
           Protocol: "http"
+        - InstancePort: "9000"
+          InstanceProtocol: "http"
+          LoadBalancerPort: "443"
+          Protocol: "https"
+          SSLCertificateId: !Ref LoadBalancerCert
       Scheme: internal
       SecurityGroups:
       - !GetAtt LoadBalancerSG.GroupId
