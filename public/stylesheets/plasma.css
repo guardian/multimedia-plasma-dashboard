@@ -50,7 +50,7 @@ a.headinglink {color: blue;
 
 a:link { color: #00f; text-decoration: none }
 a:visited { color: #009; }
-a:hover { color: #06f; text-decoration: underline; }
+a:hover { color: #06f; text-decoration: underline; cursor: pointer}
 a:active { color: #0cf; text-decoration: underline; }
 
 td { vertical-align: top; }
