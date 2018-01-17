@@ -47,6 +47,7 @@ a.headinglink {color: blue;
     font-weight: bold;
     padding-left: 0.5em;
 }
+
 a:link { color: #00f; text-decoration: none }
 a:visited { color: #009; }
 a:hover { color: #06f; text-decoration: underline; cursor: pointer}
@@ -125,6 +126,14 @@ i.control-icon {
     padding-right: 4px;
 }
 
+div.attribution {
+    font-size: 0.8em;
+    font-style: italic;
+}
+
+li.attribution {
+    list-style: none;
+}
 
 /* this requires CSS 3.0*/
 /*https://stackoverflow.com/questions/4108726/how-to-spread-elements-evenly-horizonatly*/
