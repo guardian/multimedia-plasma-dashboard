@@ -113,16 +113,16 @@ class DataController @Inject()(cc:ControllerComponents,config:Configuration,syst
     val client = getClient
 
     val table = Table[UnattachedAtom](tableName.get)
-
+    val userIndex = table.index("UserIndex")
     val accept=findPreferredFormat(request.headers.get("Accept").getOrElse("application/json"))
 
     boundsFromQueryArg(request.queryString) match {
       case Some(bounds)=>
-        makeResultNew[UnattachedAtom](table.query('userEmail->user and ('dateCreated between bounds)),accept){ params=>
+        makeResultNew[UnattachedAtom](userIndex.query('userEmail->user and ('dateCreated between bounds)),accept){ params=>
           Scanamo.exec(client)(params)
         }
       case None=>
-        makeResultNew[UnattachedAtom](table.query('userEmail->user),accept) { params =>
+        makeResultNew[UnattachedAtom](userIndex.query('userEmail->user),accept) { params =>
           Scanamo.exec(client)(params)
         }
     }
