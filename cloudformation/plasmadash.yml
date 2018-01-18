@@ -39,9 +39,6 @@ Parameters:
   DeploySubnets:
     Description: Subnets to deploy into.  These should be the same as where the database lives.
     Type: List<AWS::EC2::Subnet::Id>
-  NewRelicLicense:
-    Description: License ID for New Relic
-    Type: String
   SecretString:
     Description: Long random string to use as an application secret
     Type: String
@@ -149,8 +146,6 @@ Resources:
             Resource:
             - arn:aws:s3:::gnm-multimedia-rr-deployables
             - arn:aws:s3:::gnm-multimedia-rr-deployables/*
-            - arn:aws:s3:::gnm-multimedia-deployables
-            - arn:aws:s3:::gnm-multimedia-deployables/newrelic*
   InstanceProfile:
     Type: AWS::IAM::InstanceProfile
     Properties:
@@ -190,27 +185,6 @@ Resources:
           echo Going to install $MOST_RECENT_PACKAGE
           dpkg --install "${!MOST_RECENT_PACKAGE}"
 
-          aws s3 cp s3://gnm-multimedia-deployables/newrelic-java-3.43.0.zip /tmp
-          mkdir -p /usr/share/mmplasmadash/newrelic/logs
-          chown mmplasmadash /usr/share/mmplasmadash/newrelic/logs
-          cd /usr/share/mmplasmadash
-          unzip /tmp/newrelic-java-3.43.0.zip
-
-          cat > /usr/share/mmplasmadash/newrelic/newrelic.yml << EOF
-          common: &default_settings
-            license_key: '${NewRelicLicense}'
-            agent_enabled: true
-            app_name: Plasma Dashboard (${Stage})
-            log_level: info
-            log_daily: true
-            ssl: true
-
-            labels:
-              Stack: ${Stack}
-              App: ${App}
-              Stage: ${Stage}
-          EOF
-
           mkdir -p /usr/share/mmplasmadash/conf
           chown mmplasmadash /usr/share/mmplasmadash
 
@@ -238,7 +212,7 @@ Resources:
 
           cat > /etc/default/mmplasmadash << EOF
           #exiting on out of memory error should cause either systemd or autoscaling group to restart us
-          JAVA_OPTS="-XX:+ExitOnOutOfMemoryError -Dplay.http.secret.key=${SecretString} -javaagent:/usr/share/mmplasmadash/newrelic/newrelic.jar -Dconfig.file=/usr/share/mmplasmadash/conf/application.conf"
+          JAVA_OPTS="-XX:+ExitOnOutOfMemoryError -Dplay.http.secret.key=${SecretString} -Dconfig.file=/usr/share/mmplasmadash/conf/application.conf"
           EOF
 
           systemctl restart mmplasmadash
