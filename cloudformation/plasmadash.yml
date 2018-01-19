@@ -69,14 +69,9 @@ Resources:
           ToPort: 9000
           IpProtocol: tcp
         - CidrIp: !Ref OfficeIpRange
-          FromPort: 80
-          ToPort: 80
-          IpProtocol: tcp
-        - CidrIp: !Ref OfficeIpRange
           FromPort: 443
           ToPort: 443
           IpProtocol: tcp
-
       VpcId: !Ref VPCID
   LoadBalancer:
     Type: AWS::ElasticLoadBalancing::LoadBalancer
@@ -89,10 +84,6 @@ Resources:
         Timeout: "3"
         UnhealthyThreshold: "2"
       Listeners:
-        - InstancePort: "9000"
-          InstanceProtocol: "http"
-          LoadBalancerPort: "80"
-          Protocol: "http"
         - InstancePort: "9000"
           InstanceProtocol: "http"
           LoadBalancerPort: "443"
