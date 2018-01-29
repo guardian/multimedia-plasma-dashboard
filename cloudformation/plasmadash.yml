@@ -58,6 +58,10 @@ Parameters:
   UnattachedAtomsTableName:
     Description: Name of the Dynamo table to look at
     Type: String
+  ElkStack:
+    Description: Name of a deployed ELK6 stack (https://github.com/guardian/elk6) to send logs to
+    Type: String
+
 Resources:
   LoadBalancerSG:
     Type: AWS::EC2::SecurityGroup
@@ -166,11 +170,16 @@ Resources:
       SecurityGroups:
       - !Ref InstanceSecurityGroup
       UserData: !Base64
-        "Fn::Sub": |
+        "Fn::Sub":
+        - |
           #!/bin/bash -e
 
           mkdir -p /tmp/install
           aws s3 sync s3://gnm-multimedia-rr-deployables/${Stack}/${Stage}/${App} /tmp/install
+          aws s3 cp s3://gnm-multimedia-rr-deployables/filebeat-6.1.2-amd64.deb /tmp/install
+          aws s3 cp s3://gnm-multimedia-rr-deployables/metricbeat-6.1.2-amd64.deb /tmp/install
+          dpkg -i /tmp/install/filebeat-6.1.2-amd64.deb
+          dpkg -i /tmp/install/metricbeat-6.1.2-amd64.deb
 
           declare -x MOST_RECENT_PACKAGE=`ls -Frt /tmp/install/*.deb | grep "[^/]$" | tail -n 1`
           echo Going to install $MOST_RECENT_PACKAGE
@@ -206,7 +215,33 @@ Resources:
           JAVA_OPTS="-XX:+ExitOnOutOfMemoryError -Dplay.http.secret.key=${SecretString} -Dconfig.file=/usr/share/mmplasmadash/conf/application.conf"
           EOF
 
+          cat > /etc/filebeat/filebeat.yml << EOF
+          filebeat.prospectors:
+          - type: log
+            enabled: true
+            paths:
+            - /var/log/mmplasmadash/*.log
+            fields:
+              App: ${App}
+              Stack: ${Stack}
+              Stage: ${Stage}
+
+            multiline:
+              pattern: '^\s+'
+              negate: false
+              match: after
+
+          output.logstash:
+            hosts: ["${LogstashEndpoint}"]
+          EOF
+
           systemctl restart mmplasmadash
+          systemctl enable mmplasmadash
+          systemctl enable filebeat
+          systemctl start filebeat
+        - LogstashEndpoint:
+            Fn::ImportValue:
+              !Sub "${ElkStack}-LogstashEndpoint"
   AutoScaleGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
