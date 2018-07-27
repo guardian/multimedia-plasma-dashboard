@@ -10,7 +10,7 @@ jobs:
       CIRCLE_TEST_REPORTS: /tmp/circleci-test-results
       SBT_OPTS: -Dfile.encoding=UTF8 -Xms512M -Xmx1024M -Xss1M -XX:+CMSClassUnloadingEnabled -XX:+UseCompressedOops -Dbuild.tag="$CIRCLE_TAG" -Dbuild.number=$CIRCLE_BUILD_NUM -Dbuild.vcs.number=$CIRCLE_SHA1
     docker:
-    - image: andyg42/alpine-scala-build:1
+    - image: andyg42/alpine-scala-build:3
     steps:
     - checkout
     - run: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
@@ -26,7 +26,7 @@ jobs:
         - v1-dep-master-
         # Any branch if there are none on the default branch - this should be unnecessary if you have your default branch configured correctly
         - v1-dep-
-    - run: sbt test:compile
+    - run: echo exit | sbt test:compile
     # Save dependency cache
     - save_cache:
         key: v1-dep-{{ .Branch }}-{{ epoch }}
@@ -42,8 +42,7 @@ jobs:
         - ~/.ivy2
         - frontend/node_modules
         - $HOME/.play
-    - run: sbt test
-
+    - run: echo exit | sbt test
     - store_test_results:
         path: /tmp/circleci-test-results
     # Save artifacts
