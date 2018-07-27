@@ -3,8 +3,11 @@ FROM alpine:latest
 RUN apk update && apk add --no-cache ca-certificates openjdk8 git dpkg wget bash && rm -rf /var/cache/apk/
 RUN update-ca-certificates
 COPY setup-sbt.sh /tmp/setup-sbt.sh
+
 RUN bash /tmp/setup-sbt.sh && rm -f /tmp/setup-sbt.sh
 RUN adduser -D ci -s "/bin/bash --login"
+
+RUN mkdir -p /mnt/workspace && chown ci /mnt/workspace
 
 USER ci
 WORKDIR /home/ci
