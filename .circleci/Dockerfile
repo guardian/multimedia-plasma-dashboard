@@ -1,6 +1,6 @@
 FROM alpine:latest
 
-RUN apk update && apk add --no-cache ca-certificates openjdk8 git dpkg wget bash && rm -rf /var/cache/apk/
+RUN apk update && apk add --no-cache fakeroot tar ca-certificates openjdk8 git dpkg wget bash && rm -rf /var/cache/apk/
 RUN update-ca-certificates
 COPY setup-sbt.sh /tmp/setup-sbt.sh
 

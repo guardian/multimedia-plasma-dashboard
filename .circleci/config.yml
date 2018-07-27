@@ -116,7 +116,7 @@ jobs:
       CIRCLE_TEST_REPORTS: /tmp/circleci-test-results
       SBT_OPTS: -Dfile.encoding=UTF8 -Xms512M -Xmx1024M -Xss1M -XX:+CMSClassUnloadingEnabled -XX:+UseCompressedOops
     docker:
-    - image: andyg42/alpine-scala-build:5
+    - image: andyg42/alpine-scala-build:7
     steps:
 
     - checkout
