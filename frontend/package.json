@@ -55,7 +55,7 @@
     "testResultsProcessor": "./node_modules/jest-junit"
   },
   "jest-junit": {
-    "suiteName": "gnm glacier restore frontend tests",
+    "suiteName": "plasma dash frontend tests",
     "classNameTemplate": "{classname}-{title}",
     "titleTemplate": "{classname}-{title}",
     "usePathForSuiteName": "false"

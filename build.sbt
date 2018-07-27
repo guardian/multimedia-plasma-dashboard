@@ -16,7 +16,7 @@ unmanagedResourceDirectories in Test <+=  baseDirectory ( _ /"target/web/public/
 
 //AWS
 libraryDependencies ++= Seq(
-  "com.gu" %% "scanamo" % "1.0.0-M2" exclude("commons-logging","commons-logging")
+  "com.gu" %% "scanamo" % "1.0.0-M7" exclude("commons-logging","commons-logging")
 )
 
 //logging
