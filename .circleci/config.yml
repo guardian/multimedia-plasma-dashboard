@@ -1,0 +1,149 @@
+defaults: &defaults
+  working_directory: ~/guardian/multimedia-plasma-dashboard
+  shell: /bin/bash --login
+  # CircleCI 2.0 does not support environment variables that refer to each other the same way as 1.0 did.
+  # If any of these refer to each other, rewrite them so that they don't or see https://circleci.com/docs/2.0/env-vars/#interpolating-environment-variables-to-set-other-environment-variables .
+  environment:
+    CIRCLE_ARTIFACTS: /tmp/circleci-artifacts
+    CIRCLE_TEST_REPORTS: /tmp/circleci-test-results
+
+version: 2
+jobs:
+  scala_build_test:
+    <<: *defaults
+    # CircleCI 2.0 does not support environment variables that refer to each other the same way as 1.0 did.
+    # If any of these refer to each other, rewrite them so that they don't or see https://circleci.com/docs/2.0/env-vars/#interpolating-environment-variables-to-set-other-environment-variables .
+    environment:
+      CIRCLE_ARTIFACTS: /tmp/circleci-artifacts
+      CIRCLE_TEST_REPORTS: /tmp/circleci-test-results
+      SBT_OPTS: -Dfile.encoding=UTF8 -Xms512M -Xmx1024M -Xss1M -XX:+CMSClassUnloadingEnabled -XX:+UseCompressedOops
+    docker:
+    - image: andyg42/alpine-scala-build:4
+    steps:
+    - checkout
+    - run: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
+    # Restore the dependency cache
+    - restore_cache:
+        keys:
+        # This branch if available
+        - v1-dep-{{ .Branch }}-scala-
+        # Default branch if not
+        - v1-dep-master-
+        # Any branch if there are none on the default branch - this should be unnecessary if you have your default branch configured correctly
+        - v1-dep-
+    - run: echo exit | sbt test:compile
+    # Save dependency cache
+    - save_cache:
+        key: v1-dep-{{ .Branch }}-scala-{{ epoch }}
+        paths:
+        - ~/.m2
+        - ~/.ivy2
+        - ~/.bundle
+        - ~/.go_workspace
+        - ~/.gradle
+        - ~/.cache/bower
+        # These cache paths were specified in the 1.0 config
+        - ~/.sbt
+        - ~/.ivy2
+        - frontend/node_modules
+        - $HOME/.play
+    - run: echo exit | sbt test
+
+    - persist_to_workspace:
+        root: .
+        paths:
+         - target/
+
+    - store_test_results:
+        path: /tmp/circleci-test-results
+    # Save artifacts
+    - store_artifacts:
+        path: /tmp/circleci-artifacts
+    - store_artifacts:
+        path: /tmp/circleci-test-results
+
+  react_build_test:
+    <<: *defaults
+    shell: /bin/sh
+    # CircleCI 2.0 does not support environment variables that refer to each other the same way as 1.0 did.
+    # If any of these refer to each other, rewrite them so that they don't or see https://circleci.com/docs/2.0/env-vars/#interpolating-environment-variables-to-set-other-environment-variables .
+    environment:
+      CIRCLE_ARTIFACTS: /tmp/circleci-artifacts
+      CIRCLE_TEST_REPORTS: /tmp/circleci-test-results
+    docker:
+    - image: node:6.14-alpine
+    steps:
+    - checkout
+    - run: apk add --no-cache ca-certificates
+    - run: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
+    # Dependencies
+    #   This would typically go in either a build or a build-and-test job when using workflows
+    # Restore the dependency cache
+    - restore_cache:
+        keys:
+        # This branch if available
+        - v1-dep-{{ .Branch }}-
+        # Default branch if not
+        - v1-dep-master-
+        # Any branch if there are none on the default branch - this should be unnecessary if you have your default branch configured correctly
+        - v1-dep-
+    - run: cd frontend; npm install
+    - save_cache:
+        key: v1-dep-{{ .Branch }}-{{ epoch }}
+        paths:
+        - frontend/node_modules
+    - run: cd frontend; npm test
+    - run: cd frontend; npm run build
+    - persist_to_workspace:
+        root: .
+        paths:
+          - public/javascripts/bundle.js
+    # Teardown
+    #   If you break your build into multiple jobs with workflows, you will probably want to do the parts of this that are relevant in each
+    # Save test results
+    - store_test_results:
+        path: /tmp/circleci-test-results
+    # Save artifacts
+    - store_artifacts:
+        path: /tmp/circleci-artifacts
+    - store_artifacts:
+        path: /tmp/circleci-test-results
+
+  deployment:
+    <<: *defaults
+    environment:
+      CIRCLE_ARTIFACTS: /tmp/circleci-artifacts
+      CIRCLE_TEST_REPORTS: /tmp/circleci-test-results
+      SBT_OPTS: -Dfile.encoding=UTF8 -Xms512M -Xmx1024M -Xss1M -XX:+CMSClassUnloadingEnabled -XX:+UseCompressedOops
+    docker:
+    - image: andyg42/alpine-scala-build:7
+    steps:
+
+    - checkout
+
+    - attach_workspace:
+        at: /mnt/workspace
+
+    #scala deps are by far the longest so make sure we have those.
+    - restore_cache:
+        keys:
+        # This branch if available
+        - dep-{{ .Branch }}-scala
+        # Default branch if not
+        - dep-master-scala
+        # Any branch if there are none on the default branch - this should be unnecessary if you have your default branch configured correctly
+        - dep-
+    - run: if [ -d ./target ]; then rm -rf target; fi; cp -a /mnt/workspace/target .
+    - run: mkdir -p public/javascripts && cp -a /mnt/workspace/public/javascripts/bundle.js public/javascripts/bundle.js
+    - run: echo exit | sbt riffRaffUpload
+
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - scala_build_test
+      - react_build_test
+      - deployment:
+          requires:
+            - scala_build_test
+            - react_build_test

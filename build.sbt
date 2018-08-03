@@ -12,11 +12,10 @@ scalaVersion := "2.12.2"
 
 libraryDependencies ++= Seq( jdbc , ehcache , ws , specs2 % Test , guice )
 
-unmanagedResourceDirectories in Test <+=  baseDirectory ( _ /"target/web/public/test" )
 
 //AWS
 libraryDependencies ++= Seq(
-  "com.gu" %% "scanamo" % "1.0.0-M2" exclude("commons-logging","commons-logging")
+  "com.gu" %% "scanamo" % "1.0.0-M7" exclude("commons-logging","commons-logging")
 )
 
 //logging
@@ -35,6 +34,15 @@ libraryDependencies ++= Seq(
   "io.circe" %% "circe-generic",
   "io.circe" %% "circe-parser"
 ).map(_ % circeVersion)
+
+//update vulnerable jackson-databind
+// https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind
+libraryDependencies += "com.fasterxml.jackson.core" % "jackson-databind" % "2.9.6"
+// https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-core
+libraryDependencies += "com.fasterxml.jackson.core" % "jackson-core" % "2.9.6"
+// https://mvnrepository.com/artifact/com.google.guava/guava
+libraryDependencies += "com.google.guava" % "guava" % "25.1-jre"
+
 
 debianPackageDependencies := Seq("openjdk-8-jre-headless")
 serverLoading in Debian := Some(ServerLoader.Systemd)
