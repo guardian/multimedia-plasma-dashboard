@@ -39,9 +39,6 @@ Parameters:
   DeploySubnets:
     Description: Subnets to deploy into.  These should be the same as where the database lives.
     Type: List<AWS::EC2::Subnet::Id>
-  SecretString:
-    Description: Long random string to use as an application secret
-    Type: String
   AtomToolDomain:
     Description: Hostname to contact the Media Atom Tool
     Type: String
@@ -61,6 +58,10 @@ Parameters:
   ElkStack:
     Description: Name of a deployed ELK6 stack (https://github.com/guardian/elk6) to send logs to
     Type: String
+  AppSecretString:
+    Description: Long random string used as an app secret to secure cookies etc.
+    Type: String
+    NoEcho: True
 
 Resources:
   LoadBalancerSG:
@@ -189,6 +190,7 @@ Resources:
           chown mmplasmadash /usr/share/mmplasmadash
 
           cat > /usr/share/mmplasmadash/conf/application.conf << EOF
+          play.http.secret.key = "${AppSecretString}"
           play.filters {
 
             # Enabled filters are run automatically against Play.
@@ -212,7 +214,7 @@ Resources:
 
           cat > /etc/default/mmplasmadash << EOF
           #exiting on out of memory error should cause either systemd or autoscaling group to restart us
-          JAVA_OPTS="-XX:+ExitOnOutOfMemoryError -Dplay.http.secret.key=${SecretString} -Dconfig.file=/usr/share/mmplasmadash/conf/application.conf"
+          JAVA_OPTS="-XX:+ExitOnOutOfMemoryError -Dconfig.file=/usr/share/mmplasmadash/conf/application.conf"
           EOF
 
           cat > /etc/filebeat/filebeat.yml << EOF
