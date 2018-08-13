@@ -5,7 +5,11 @@ import sinon from 'sinon';
 
 describe("MonthSelector", ()=>{
     test("should prepare entries for Jan 2017 until told to", ()=>{
-        const rendered=shallow(<MonthSelector toYear={2018} toMonth={4}/>);
+        const selectorChangeStub = sinon.stub();
+
+        const rendered=shallow(<MonthSelector onSelectorChange={selectorChangeStub}
+                                            toYear={2018} toMonth={4} label="month"
+                                            internalName="id_month_selector"/>);
 
         expect(rendered.instance().valueList).toEqual([
             {"external": "Jan 2017", "internal": "2017_1"},
@@ -28,7 +32,9 @@ describe("MonthSelector", ()=>{
     });
     
     test("if nothing provided then MonthSelector should not render empty", ()=>{
-        const rendered=shallow(<MonthSelector onSelectorChange={null} label="Month" internalName="id_month_selector"/>);
+        const selectorChangeStub = sinon.stub();
+
+        const rendered=shallow(<MonthSelector onSelectorChange={selectorChangeStub} label="Month" internalName="id_month_selector"/>);
 
         expect(rendered.instance().valueList.length>1).toBeTruthy();
     })
