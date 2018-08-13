@@ -8,7 +8,7 @@ resolvers += "scalaz-bintray" at "https://dl.bintray.com/scalaz/releases"
       
 resolvers += "Akka Snapshot Repository" at "http://repo.akka.io/snapshots/"
       
-scalaVersion := "2.12.2"
+scalaVersion := "2.12.3"
 
 libraryDependencies ++= Seq( jdbc , ehcache , ws , specs2 % Test , guice )
 
@@ -35,11 +35,16 @@ libraryDependencies ++= Seq(
   "io.circe" %% "circe-parser"
 ).map(_ % circeVersion)
 
+
+val jacksonVersion = "2.9.6"
 //update vulnerable jackson-databind
 // https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind
-libraryDependencies += "com.fasterxml.jackson.core" % "jackson-databind" % "2.9.6"
+libraryDependencies += "com.fasterxml.jackson.core" % "jackson-databind" % jacksonVersion
 // https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-core
-libraryDependencies += "com.fasterxml.jackson.core" % "jackson-core" % "2.9.6"
+libraryDependencies += "com.fasterxml.jackson.core" % "jackson-core" % jacksonVersion
+libraryDependencies += "com.fasterxml.jackson.dataformat" % "jackson-dataformat-cbor" % jacksonVersion
+libraryDependencies += "com.fasterxml.jackson.dataformat" % "jackson-dataformat-xml" % jacksonVersion
+
 // https://mvnrepository.com/artifact/com.google.guava/guava
 libraryDependencies += "com.google.guava" % "guava" % "25.1-jre"
 
