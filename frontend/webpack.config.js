@@ -12,7 +12,7 @@ var config = {
         publicPath: '/javascripts'
     },
     module : {
-        loaders : [
+        rules : [
             {
                 test : /\.jsx?/,
                 include : APP_DIR,
