@@ -8,14 +8,17 @@ resolvers += "scalaz-bintray" at "https://dl.bintray.com/scalaz/releases"
       
 resolvers += "Akka Snapshot Repository" at "http://repo.akka.io/snapshots/"
       
-scalaVersion := "2.12.3"
+scalaVersion := "2.12.13"
 
 libraryDependencies ++= Seq( jdbc , ehcache , ws , specs2 % Test , guice )
 
 
 //AWS
 libraryDependencies ++= Seq(
-  "com.gu" %% "scanamo" % "1.0.0-M7" exclude("commons-logging","commons-logging")
+  "org.scanamo" %% "scanamo" % "1.0-M13" exclude("commons-logging","commons-logging"),
+  "org.scanamo" %% "scanamo-formats" % "1.0.0-M11",
+  "software.amazon.awssdk" % "dynamodb" % "2.15.66",
+  "software.amazon.awssdk" % "auth" % "2.15.66",
 )
 
 //logging
@@ -24,29 +27,26 @@ libraryDependencies ++= Seq(
   "ch.qos.logback" % "logback-classic" % "1.2.3",
   // https://mvnrepository.com/artifact/ch.qos.logback/logback-core
   "ch.qos.logback" % "logback-core" % "1.2.3",
-  "org.slf4j" % "jcl-over-slf4j" % "1.7.25"
+  "org.slf4j" % "jcl-over-slf4j" % "1.7.30"
 )
 
 //circe
-val circeVersion = "0.9.0"
+val circeVersion = "0.13.0"
 libraryDependencies ++= Seq(
   "io.circe" %% "circe-core",
   "io.circe" %% "circe-generic",
   "io.circe" %% "circe-parser"
 ).map(_ % circeVersion)
 
-
-val jacksonVersion = "2.9.6"
-//update vulnerable jackson-databind
-// https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind
-libraryDependencies += "com.fasterxml.jackson.core" % "jackson-databind" % jacksonVersion
-// https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-core
-libraryDependencies += "com.fasterxml.jackson.core" % "jackson-core" % jacksonVersion
-libraryDependencies += "com.fasterxml.jackson.dataformat" % "jackson-dataformat-cbor" % jacksonVersion
-libraryDependencies += "com.fasterxml.jackson.dataformat" % "jackson-dataformat-xml" % jacksonVersion
-
+/*
+vulnerable dependencies identified by Snyk
+ */
+libraryDependencies ++= Seq(
+  "org.apache.httpcomponents" % "httpclient" % "4.5.13",
+  "com.fasterxml.jackson.core" % "jackson-databind" % "2.10.5.1"
+)
 // https://mvnrepository.com/artifact/com.google.guava/guava
-libraryDependencies += "com.google.guava" % "guava" % "25.1-jre"
+libraryDependencies += "com.google.guava" % "guava" % "30.1-jre"
 
 
 debianPackageDependencies := Seq("openjdk-8-jre-headless")
