@@ -1,45 +1,42 @@
 package controllers
 import javax.inject._
-
 import akka.actor.ActorSystem
 import play.api.mvc._
-
-import com.gu.scanamo._
-import com.gu.scanamo.syntax._
-import models.{ErrorResponse,ConfigResponse, UnattachedAtom}
+import org.scanamo._
+import org.scanamo.syntax._
+import models.{ConfigResponse, ErrorResponse, UnattachedAtom}
 import play.api.Configuration
-import akka.event.{DiagnosticLoggingAdapter, Logging}
-import com.amazonaws.auth.profile.ProfileCredentialsProvider
-import com.amazonaws.auth.{AWSCredentialsProviderChain, EnvironmentVariableCredentialsProvider, InstanceProfileCredentialsProvider}
-import com.amazonaws.services.dynamodbv2.{AmazonDynamoDB, AmazonDynamoDBClientBuilder}
-import com.gu.scanamo.error.{DynamoReadError, ScanamoError}
-import com.gu.scanamo.ops.ScanamoOps
+import org.scanamo.ops.ScanamoOps
 import play.api.Logger
 import io.circe.generic.auto._
 import io.circe.syntax._
-
+import org.slf4j.LoggerFactory
+import software.amazon.awssdk.auth.credentials._
+import software.amazon.awssdk.regions.Region
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient
 
 @Singleton
 class DataController @Inject()(cc:ControllerComponents,config:Configuration,system:ActorSystem) extends AbstractController (cc){
   private val region = config.get[String]("region")
+  private val logger = LoggerFactory.getLogger(getClass)
+  
+  protected def getClient:DynamoDbClient = {
+    val chain = AwsCredentialsProviderChain.builder()
+      .addCredentialsProvider(EnvironmentVariableCredentialsProvider.create())
+      .addCredentialsProvider(ProfileCredentialsProvider.create("multimedia"))
+      .addCredentialsProvider(ProfileCredentialsProvider.create())
+      .addCredentialsProvider(InstanceProfileCredentialsProvider.create())
+      .build()
 
-  protected def getClient:AmazonDynamoDB = {
-    val chain = new AWSCredentialsProviderChain(
-      new EnvironmentVariableCredentialsProvider(),
-      new ProfileCredentialsProvider("multimedia"),
-      new ProfileCredentialsProvider(),
-      InstanceProfileCredentialsProvider.getInstance()
-    )
-
-    AmazonDynamoDBClientBuilder.standard()
-      .withCredentials(chain)
-      .withRegion(region)
+    DynamoDbClient.builder()
+      .credentialsProvider(chain)
+      .region(Region.of(region))
       .build()
   }
 
   val tableName: Option[String] = config.get[Option[String]]("UnattachedAtomsTable")
 
-  def boundsFromQueryArg(queryString:Map[String,Seq[String]]):Option[Bounds[String]] = {
+  def boundsFromQueryArg(queryString:Map[String,Seq[String]]) = {
     val lastDayOfMonth = Seq (31, 29, 31, 30, 30, 31, 31, 30, 31, 31, 30, 31)
 
     queryString.get("month").map(monthStringSeq=>{
@@ -54,10 +51,10 @@ class DataController @Inject()(cc:ControllerComponents,config:Configuration,syst
         lastDay
       }T23:59:59.999Z"
 
-      Logger.info (s"startString $startString")
-      Logger.info (s"endString $endString")
+      logger.info (s"startString $startString")
+      logger.info (s"endString $endString")
 
-      Bounds (Bound (startString), Bound (endString) )
+      "dateCreated" between startString and endString
     })
   }
 
@@ -85,8 +82,8 @@ class DataController @Inject()(cc:ControllerComponents,config:Configuration,syst
       }
     } catch {
       case excep:Any=>
-        Logger.error(excep.toString)
-        Logger.error(excep.getStackTrace.map(_.toString).mkString("\n"))
+        logger.error(excep.toString)
+        logger.error(excep.getStackTrace.map(_.toString).mkString("\n"))
         val response = ErrorResponse("generic error", excep.toString, stackTrace = Some(excep.getStackTrace.map(_.toString)))
         InternalServerError(response.asJson.toString)
     }
@@ -98,7 +95,7 @@ class DataController @Inject()(cc:ControllerComponents,config:Configuration,syst
   }
 
   def findPreferredFormat(acceptString:String):String = {
-    val possibleAccept = acceptString.split("\\s*,\\s*").map(removeParams(_))
+    val possibleAccept = acceptString.split("\\s*,\\s*").map(removeParams)
 
     if(possibleAccept.contains("application/json")) return "application/json"
     if(possibleAccept.contains("text/plain")) return "text/plain"
@@ -108,7 +105,10 @@ class DataController @Inject()(cc:ControllerComponents,config:Configuration,syst
   }
 
   def forUser(user:String) = Action { implicit request=>
-    Logger.info(s"unattached atoms table is $tableName")
+    import org.scanamo.generic.auto._
+    import org.scanamo.syntax._
+
+    logger.info(s"unattached atoms table is $tableName")
 
     val client = getClient
 
@@ -118,19 +118,20 @@ class DataController @Inject()(cc:ControllerComponents,config:Configuration,syst
 
     boundsFromQueryArg(request.queryString) match {
       case Some(bounds)=>
-        makeResultNew[UnattachedAtom](userIndex.query('userEmail->user and ('dateCreated between bounds)),accept){ params=>
-          Scanamo.exec(client)(params)
+        makeResultNew[UnattachedAtom](userIndex.query("userEmail"->user and bounds), accept){ params=>
+          Scanamo(client).exec(params)
         }
       case None=>
-        makeResultNew[UnattachedAtom](userIndex.query('userEmail->user),accept) { params =>
-          Scanamo.exec(client)(params)
+        makeResultNew[UnattachedAtom](userIndex.query("userEmail"->user), accept) { params =>
+          Scanamo(client).exec(params)
         }
     }
 
   }
 
   def all = Action { implicit request =>
-    Logger.info(s"unattached atoms table is $tableName")
+    logger.info(s"unattached atoms table is $tableName")
+    import org.scanamo.generic.auto._
 
     val client = getClient
 
@@ -140,12 +141,12 @@ class DataController @Inject()(cc:ControllerComponents,config:Configuration,syst
 
     boundsFromQueryArg(request.queryString) match {
       case Some(bounds)=>
-        makeResultNew[UnattachedAtom](dateIndex.query('dummy->"n" and ('dateCreated between bounds)),accept) { params =>
-          Scanamo.exec(client)(params)
+        makeResultNew[UnattachedAtom](dateIndex.query("dummy"->"n" and bounds),accept) { params =>
+          Scanamo(client).exec(params)
         }
       case None=>
         makeResultNew[UnattachedAtom](null,accept) { params =>
-          Scanamo.exec(client)(table.scan())
+          Scanamo(client).exec(table.scan())
         }
     }
   }
