@@ -45,6 +45,7 @@ Parameters:
   AtomToolSharedSecret:
     Description: Shared secret for communicating with the Media Atom Tool
     Type: String
+    NoEcho: true
   LoadBalancerCert:
     Description: ARN of an SSL certificate to allow https access to loadbalancer
     Type: String
