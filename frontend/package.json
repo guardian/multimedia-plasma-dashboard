@@ -15,7 +15,7 @@
     "@babel/plugin-transform-react-display-name": "^7.12.1",
     "@babel/preset-env": "^7.12.11",
     "@babel/preset-react": "^7.12.10",
-    "axios": "^0.21.1",
+    "axios": "^0.21.3",
     "babel-loader": "^8.2.2",
     "js-cookie": "^2.2.0",
     "lodash.omit": "^4.5.0",
